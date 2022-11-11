@@ -1,0 +1,7 @@
+/libs/*
+/dataset/middlebury/*
+/cmake-build-debug-coverage/
+/cmake-build-debug/
+.idea
+!.gitignore
+tree.txt
