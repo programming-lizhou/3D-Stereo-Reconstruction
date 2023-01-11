@@ -6,6 +6,7 @@
 #include "opencv2/xfeatures2d.hpp"
 
 
+
 using namespace cv;
 using namespace cv::xfeatures2d;
 using namespace std;
@@ -62,17 +63,67 @@ void Detector::detector_ORB() {
 }
 
 void Detector::detector_FREAK() {
+    // Create a FREAK descriptor extractor
+    /*
+     * Adjust parameters:
+     * 1. Whether to use orientationNormalized
+     * 2. Whether to use scaleNormalized
+     * 3. Adjust patternScale
+     * 4. Adjust Octaves
+     */
+    Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
+    detector->detect(this->img0, this->keypoints0);
+    detector->detect(this->img1, this->keypoints1);
+    // create descriptor
+    Ptr<FREAK> descriptor = FREAK::create();
+    descriptor->compute(this->img0, this->keypoints0, this->descriptors0);
+    descriptor->compute(this->img1, this->keypoints1, this->descriptors1);
 
+    if(descriptors0.type()!=CV_32F) {
+        descriptors0.convertTo(descriptors0, CV_32F);
+        }
+
+    if(descriptors1.type()!=CV_32F) {
+        descriptors1.convertTo(descriptors1, CV_32F);
+    }
 }
 
 void Detector::detector_BRISK() {
+    // Create a BRISK descriptor extractor
+    /*
+     * Adjust parameters:
+     * 1. Adjust threshold
+     * 2. Adjust octaves
+     * 3. Adjust patternScale
+     */
+    //Ptr<BRISK> brisk = BRISK::create();
+    cv::Ptr<cv::BRISK> brisk = cv::BRISK::create(40, 3, 2.0f);
+    // Detect keypoints and compute descriptors
+    brisk->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
+    brisk->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);
 
+    if(descriptors0.type()!=CV_32F) {
+        descriptors0.convertTo(descriptors0, CV_32F);
+        }
 
+    if(descriptors1.type()!=CV_32F) {
+        descriptors1.convertTo(descriptors1, CV_32F);
+    }
 }
 
 void Detector::detector_KAZE() {
-
-
+    // Create a KAZE descriptor extractor (Not checked yet)
+    /*
+     * Adjust parameters:
+     * 1. Whether to use extended descriptor (128-dimensional)
+     * 2. Whether to use upright descriptor
+     * 3. Adjust threshold, octaves, octave layers
+     * 3. Switch diffusivity (DIFF_PM_G1, DIFF_PM_G2, DIFF_WEICKERT, DIFF_CHARBONNIER)
+     */
+    Ptr<KAZE> kaze = KAZE::create(true, true, 0.01, 3, 3, cv::KAZE::DIFF_CHARBONNIER);
+    // Detect keypoints and compute descriptors
+    kaze->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
+    kaze->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);
 }
 
 
