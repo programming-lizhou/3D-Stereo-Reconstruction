@@ -14,24 +14,23 @@ using namespace std;
 Detector::Detector() = default;
 
 Detector::Detector(Image_pair pair) {
-//    this->type = tp;
     this->imagePair = pair;
     //read image to Mat
     this->img0 = imread(pair.view_path_0);
     this->img1 = imread(pair.view_path_1);
 }
 
-void Detector::setNum_features(int num) {
-    this->num_features = num;
-}
-
-void Detector::setMin_hessian(int num) {
-    this->min_Hessian = num;
-}
-
 void Detector::detector_SIFT() {
-    //create detector
-    Ptr<SIFT> detector = SIFT::create(this->num_features);
+    // create SIFT detector
+
+    // params for SIFT
+    int nfeatures = 0;
+    int nOctaveLayers = 4;
+    float contrastThreshold = 0.04;
+    int edgeThreshold = 10;
+    float sigma = 1.6;
+
+    Ptr<SIFT> detector = SIFT::create(nfeatures, nOctaveLayers, contrastThreshold, edgeThreshold, sigma);
     detector->detect(this->img0, this->keypoints0);
     detector->detect(this->img1, this->keypoints1);
     //create descriptor
@@ -42,14 +41,23 @@ void Detector::detector_SIFT() {
 }
 
 void Detector::detector_SURF() {
-    Ptr<SURF> detector = SURF::create(this->min_Hessian);
+
+    // params for SURF
+    int hessianThreshold = 100;
+    int nOctaves = 4;
+    int nOctaveLayers = 4;
+    bool extended = false;
+    bool upright = false;
+
+
+    Ptr<SURF> detector = SURF::create(hessianThreshold, nOctaves, nOctaveLayers, extended, upright);
     // detect keypoints and compute descriptors
     detector->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
     detector->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);
 }
 
 void Detector::detector_ORB() {
-    Ptr<ORB> detector = ORB::create(this->num_features);
+    Ptr<ORB> detector = ORB::create();
     detector->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
     detector->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);
     //convert the format
@@ -96,8 +104,12 @@ void Detector::detector_BRISK() {
      * 2. Adjust octaves
      * 3. Adjust patternScale
      */
-    //Ptr<BRISK> brisk = BRISK::create();
-    cv::Ptr<cv::BRISK> brisk = cv::BRISK::create(40, 3, 2.0f);
+    // params for BRISK
+    int thresh = 40;
+    int octaves = 4;
+    float patternScale = 1.0f;
+
+    cv::Ptr<cv::BRISK> brisk = cv::BRISK::create(thresh, octaves, patternScale);
     // Detect keypoints and compute descriptors
     brisk->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
     brisk->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);
@@ -120,7 +132,15 @@ void Detector::detector_KAZE() {
      * 3. Adjust threshold, octaves, octave layers
      * 3. Switch diffusivity (DIFF_PM_G1, DIFF_PM_G2, DIFF_WEICKERT, DIFF_CHARBONNIER)
      */
-    Ptr<KAZE> kaze = KAZE::create(true, true, 0.01, 3, 3, cv::KAZE::DIFF_CHARBONNIER);
+    // params for KAZE
+    bool extended = false;
+    bool upright = false;
+    float threshold = 0.001;
+    int nOctaves = 4;
+    int nOctaveLayers = 4;
+    cv::KAZE::DiffusivityType diffusivityType = cv::KAZE::DIFF_CHARBONNIER;
+
+    Ptr<KAZE> kaze = KAZE::create(extended, upright, threshold, nOctaves, nOctaveLayers, diffusivityType);
     // Detect keypoints and compute descriptors
     kaze->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
     kaze->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);

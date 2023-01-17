@@ -14,19 +14,20 @@ class SparseMatching {
 public:
     SparseMatching();
     SparseMatching(int, int);
-    void match(cv::Mat, cv::Mat, float);
+    void match(cv::Mat, cv::Mat, std::vector<cv::KeyPoint>, std::vector<cv::KeyPoint>);
     void ransac(std::vector<cv::KeyPoint>, std::vector<cv::KeyPoint>);
     std::vector<cv::DMatch> getGood_matches();
     std::vector<cv::DMatch> get_sorted();
     static bool sort_distance(cv::DMatch, cv::DMatch);
+    std::vector<cv::Point2f> getMatched0();
+    std::vector<cv::Point2f> getMatched1();
+
 private:
-//    int num_want;
-    int mode; //0 for brute force + ratio, 1 for flann based + knn lowe, 2 for ransac
+    int mode;
     int norm_type;
-//    float ratio_thresh;
     std::vector<cv::DMatch> good_matches;
-//    std::vector<cv::DMatch> selected_matches;
-//    std::vector<cv::DMatch> good_matches_sorted; //sorted by distance of the matched points
+    std::vector<cv::Point2f> key_points0;
+    std::vector<cv::Point2f> key_points1;
     cv::Ptr<cv::DescriptorMatcher> matcher;
 
 

@@ -13,41 +13,34 @@ using namespace std;
 
 EightPointAlg::EightPointAlg() = default;
 
-EightPointAlg::EightPointAlg(float (*im0)[3], float (*im1)[3], vector<KeyPoint> keypoints0, vector<KeyPoint> keypoints1, vector<DMatch> good_matches) {
+EightPointAlg::EightPointAlg(float (*im0)[3], float (*im1)[3], std::vector<cv::Point2f> points0, std::vector<cv::Point2f> points1) {
     Mat k_0 = Mat(3, 3, CV_32FC1, im0);
     Mat k_1 = Mat(3, 3, CV_32FC1, im1);
     k_0.convertTo(k_0, CV_64FC1);
     k_1.convertTo(k_1, CV_64FC1);
     this->k0 = k_0;
     this->k1 = k_1;
-    vector<DMatch> matches;
-    for(int i = 0; i < good_matches.size(); i++) {
-        matches.push_back(good_matches[i]);
-    }
 
-    for(auto p = matches.begin(); p != matches.end(); p++) {
-        this->points0.push_back(keypoints0.at(p->queryIdx).pt);
-        this->points1.push_back(keypoints1.at(p->trainIdx).pt);
-    }
+    this->points0 = points0;
+    this->points1 = points1;
 }
 
 void EightPointAlg::computeFMtx(int mode) {
     Mat FMtx;
-//    cout << "test";
     if(mode == 1) {
         FMtx = findFundamentalMat(this->points0, this->points1, FM_8POINT);
     } else if(mode == 0){
         //在实现完后，经过一些测试，发现自己实现八点法的话，特征点的好坏对基础矩阵结果影响巨大，总之不够稳定。
+        // note : not stable, sometimes work, sometimes not
         // mannually implement
         vector<Point2f> points80(8);
         vector<Point2f> points81(8);
         for(int i = 0; i < 8; i++) {
-            points80[i] = this->points0[this->points0.size() - i - 1];
-            points81[i] = this->points1[this->points1.size() - i - 1];
-//            points80[i] = this->points0[i];
-//            points81[i] = this->points1[i];
+//            points80[i] = this->points0[this->points0.size() - i - 1];
+//            points81[i] = this->points1[this->points1.size() - i - 1];
+            points80[i] = this->points0[i];
+            points81[i] = this->points1[i];
         }
-//        cout << "test";
         //we compute the normalization matrix for pts0 and pts1.
         //reference : https://www5.cs.fau.de/fileadmin/lectures/2014s/Lecture.2014s.IMIP/exercises/4/exercise4.pdf
         //the method is called normalized 8 point alg, in order to achieve better numerical stability
@@ -107,7 +100,7 @@ void EightPointAlg::computeFMtx(int mode) {
         auto matV = svd.matrixV();
         //get last column
         Matrix<float,9,1> res = matV.col(matV.cols() - 1);
-        //unstack一下, then we need transpose
+        //unstack, then we need transpose
         Map<Matrix3f> f_before_transpose(res.data(), 3, 3);
 
         // with projection, according to page 14 of slide5 of cv2 course.
@@ -144,11 +137,24 @@ void EightPointAlg::computeFMtx(int mode) {
 }
 
 
-void EightPointAlg::recoverRt() {
-    Mat RR; Mat tt;
-    recoverPose(this->EssentialMtx, this->points0, this->points1, RR, tt);
-    this->R = RR;
-    this->t = tt;
+void EightPointAlg::recoverRt(int mode) {
+    // if mode is 0, we recover pose from fundamental matrix we calculated
+    if(mode == 0) {
+        Mat RR;
+        Mat tt;
+        recoverPose(this->EssentialMtx, this->points0, this->points1, RR, tt);
+        this->R = RR;
+        this->t = tt;
+    } else if(mode == 1) {
+        // if mode is 1, we use recoverPose to directly get R, t, from matched points, it's in fact 5 point alg.
+        Mat RR;
+        Mat tt;
+        Mat essentialMtx;
+        recoverPose(this->points0, this->points1, this->k0, cv::noArray(), this->k1, cv::noArray(), essentialMtx, RR, tt);
+        this->R = RR;
+        this->t = tt;
+        this->EssentialMtx = essentialMtx;
+    }
 }
 
 
@@ -164,6 +170,9 @@ Mat EightPointAlg::getT() {
 
 
 
+Mat EightPointAlg::getE() {
+    return this->EssentialMtx;
+}
 
 
 

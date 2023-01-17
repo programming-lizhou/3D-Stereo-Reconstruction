@@ -13,15 +13,19 @@ class EightPointAlg {
 public:
     EightPointAlg();
 
-    EightPointAlg(float im0[][3], float im1[][3], std::vector<cv::KeyPoint>, std::vector<cv::KeyPoint>, std::vector<cv::DMatch>);
+    EightPointAlg(float im0[][3], float im1[][3], std::vector<cv::Point2f>, std::vector<cv::Point2f>);
 
+    // mode decides how we calculate the fundamental matrix
     void computeFMtx(int mode);
 
-    void recoverRt();
+    // mode decides how we get R, T
+    void recoverRt(int mode);
 
     cv::Mat getR();
 
     cv::Mat getT();
+
+    cv::Mat getE();
 
 private:
     //int mode; // if 0, use the version implemented by myself, if 1, use the method from opencv.
