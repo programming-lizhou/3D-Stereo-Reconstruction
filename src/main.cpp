@@ -30,9 +30,9 @@ int main() {
 //    detector.detector_SIFT();
 //    detector.detector_SURF();
 //    detector.detector_ORB();
-//    detector.detector_FREAK();
+    detector.detector_FREAK();
 //    detector.detector_BRISK();
-    detector.detector_KAZE();
+//    detector.detector_KAZE();
 
     // do sparse matching
     SparseMatching sparseMatching(0, NORM_L2);

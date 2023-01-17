@@ -90,9 +90,19 @@ void SparseMatching::ransac(vector<KeyPoint> keypoints0, vector<KeyPoint> keypoi
         vector<unsigned char> mask;
         Mat mtx = findHomography(srcpts, dstpts, RANSAC, reprojectionThreshold, mask);
         this->good_matches.clear();
+        this->key_points0.clear();
+        this->key_points1.clear();
         for (int i = 0; i < mask.size(); i++) {
             if ((int) mask[i]) {
                 this->good_matches.push_back(good_matches_origin[i]);
+
+                KeyPoint kp0 = keypoints0.at(good_matches_origin[i].queryIdx);
+                Point2f p0 = cv::Point2f(kp0.pt.x, kp0.pt.y);
+                KeyPoint kp1 = keypoints1.at(good_matches_origin[i].trainIdx);
+                Point2f p1 = cv::Point2f(kp1.pt.x, kp1.pt.y);
+
+                key_points0.push_back(p0);
+                key_points1.push_back(p1);
             }
         }
     }
