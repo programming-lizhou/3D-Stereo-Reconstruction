@@ -12,9 +12,14 @@
 #include "dataloader_mb.h"
 #include "sparse_matching.h"
 #include "dense_matching.h"
+#include "bundle_adjustment.h"
 using namespace cv::xfeatures2d;
 using namespace std;
 using namespace cv;
+
+bool sort_distance(DMatch dMatch1, DMatch dMatch2) {
+    return dMatch1.distance < dMatch2.distance;
+}
 
 int main() {
     // init dataloader
@@ -26,11 +31,10 @@ int main() {
 
     // init detector
     Detector detector(imagePair);
-
-//    detector.detector_SIFT();
+      detector.detector_SIFT();
 //    detector.detector_SURF();
 //    detector.detector_ORB();
-    detector.detector_FREAK();
+//    detector.detector_FREAK();
 //    detector.detector_BRISK();
 //    detector.detector_KAZE();
 
@@ -38,7 +42,7 @@ int main() {
     SparseMatching sparseMatching(0, NORM_L2);
     sparseMatching.match(detector.getDescriptors0(), detector.getDescriptors1(), detector.getKeypoints0(), detector.getKeypoints1());
     // whether to apply ransac, if not, comment it
-    sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
+    // sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
 
     vector<DMatch> seletect_matches = sparseMatching.getGood_matches(); // here: unsorted
 //    vector<DMatch> seletect_matches = sparseMatching.get_sorted(); // here: sorted
@@ -50,19 +54,41 @@ int main() {
     Mat k0 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx0);
     Mat k1 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx1);
     cv::recoverPose(sparseMatching.getMatched0(), sparseMatching.getMatched1(), k0, cv::noArray(), k1, cv::noArray(), esstenM, RR, tt);
-    cout << esstenM << endl;
-    cout << RR << endl;
-    cout << tt << endl;
+    //cout << esstenM << endl;
+    //cout << RR << endl;
+    //cout << tt << endl;
+
+    std::vector<cv::Point2f> points0;
+    std::vector<cv::Point2f> points1;
+    sort(seletect_matches.begin(), seletect_matches.end(), sort_distance);
+    std::vector<cv::DMatch> matches;
+    for (int i=0;i<seletect_matches.size();i++){
+        matches.push_back(seletect_matches[i]);
+    }
+    std::cout<<"number of matched points: "<<matches.size()<<std::endl;
+    for(int i=0;i<matches.size();i++){
+        points0.push_back(detector.getKeypoints0()[matches[i].queryIdx].pt);
+        points1.push_back(detector.getKeypoints1()[matches[i].trainIdx].pt);
+    }
 
     EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
     // note, manually computing can work with Kaze, and BF
     eightPointAlg.computeFMtx(0); // 0: manually, 1: opencv
-    eightPointAlg.recoverRt(0);
-    cout << eightPointAlg.getE() << endl;
+    eightPointAlg.recoverRt(1);
+    cout << "eightpointalg result: " << endl;
+    // cout << eightPointAlg.getE() << endl;
     cout << eightPointAlg.getR() << endl;
     cout << eightPointAlg.getT() << endl;
     cv::Mat R1 = eightPointAlg.getR();
     cv::Mat t1 = eightPointAlg.getT();
+
+
+    BA ba = BA(points0, points1);
+    std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R1, t1);
+    std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 10);
+    std::cout << "BA result: " << std::endl;
+    std::cout << iter_transformation.first << std::endl;
+    std::cout << iter_transformation.second<< std::endl;
 
     Rectify rectify = Rectify(RR, tt, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
     cv::imwrite("img111.png", rectify.getRectified_img0());
