@@ -12,13 +12,15 @@ class DenseMatching {
 public:
     DenseMatching();
     DenseMatching(Image_pair, cv::Mat, cv::Mat);
-    void match(int, int, int); // mode 0: use SGBM, 1: use BM, 2: use cvCreateStereoGCState Method
+    void match(int); // mode 0: use SGBM, 1: use BM, 2: use cvCreateStereoGCState Method
     cv::Mat getDisp();
+    cv::Mat getColorDisp();
 private:
     Image_pair imagePair;
     cv::Mat rectified_img0;
     cv::Mat rectified_img1;
     cv::Mat disparity_map;
+    cv::Mat color_disparity_map;
 };
 
 

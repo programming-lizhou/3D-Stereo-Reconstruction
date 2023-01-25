@@ -19,7 +19,7 @@ using namespace cv;
 int main() {
     // init dataloader
     Dataloader dataloader;
-    dataloader.setDataset_name("Recycle");
+    dataloader.setDataset_name("Piano");
     dataloader.retrievePair();
     // get image pair
     Image_pair imagePair = dataloader.getPair();
@@ -27,10 +27,10 @@ int main() {
     // init detector
     Detector detector(imagePair);
 
-//    detector.detector_SIFT();
+    detector.detector_SIFT();
 //    detector.detector_SURF();
 //    detector.detector_ORB();
-    detector.detector_FREAK();
+//    detector.detector_FREAK();
 //    detector.detector_BRISK();
 //    detector.detector_KAZE();
 
@@ -69,10 +69,11 @@ int main() {
     cv::imwrite("img222.png", rectify.getRectified_img1());
     DenseMatching denseMatching(imagePair, rectify.getRectified_img0(), rectify.getRectified_img1());
 //    DenseMatching denseMatching(imagePair, detector.getImg0(), detector.getImg1());
-    denseMatching.match(0, 256, 3);
+    denseMatching.match(1);
     Mat disp = denseMatching.getDisp();
+    Mat color_disp = denseMatching.getColorDisp();
     imwrite("res.png", disp);
-
+    imwrite("color_res.png", color_disp);
 
 
     //here we show ground truth disp
@@ -80,9 +81,11 @@ int main() {
     Mat img1 = imread(imagePair.view_path_1, 1);
     //DenseMatching denseMatching_gt(imagePair, detector.getImg0(), detector.getImg1());
     DenseMatching denseMatching_gt(imagePair, img0, img1);
-    denseMatching_gt.match(0, 256, 3);
+    denseMatching_gt.match(0);
     Mat disp_gt = denseMatching_gt.getDisp();
     imwrite("res_gt.png", disp_gt);
+    Mat color_disp_gt = denseMatching_gt.getColorDisp();
+    imwrite("color_res_gt.png", color_disp_gt);
 
 /*
 
