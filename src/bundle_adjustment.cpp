@@ -4,8 +4,12 @@
 
 #include "bundle_adjustment.h"
 
+#include <utility>
 
-BA::BA(std::vector<cv::Point2f> points1, std::vector<cv::Point2f> points2) {
+
+BA::BA(Image_pair ip, std::vector<cv::Point2f> points1, std::vector<cv::Point2f> points2) {
+    this->imagePair = ip;
+
     this->points1 = points1;
     this->points2 = points2;
 
@@ -47,19 +51,19 @@ std::pair<cv::Mat, cv::Mat> BA::optimize(std::pair<cv::Mat, cv::Mat>& Transforma
     for (size_t i=0;i<this->points1.size();i++){
         g2o::VertexPointXYZ* point_vertex = new g2o::VertexPointXYZ();
         point_vertex->setId(2 + i); // each vertex should its own number
-        double x = (this->points1[i].x - 1284.862) * 1.0 / 2945.377;
-        double y = (this->points1[i].y - 954.52) * 1.0 / 2945.377; // TODO:intrinsic parameters for camera 1
+        double x = (this->points1[i].x - this->imagePair.intrinsic_mtx0[0][2]) * 1.0 / this->imagePair.intrinsic_mtx0[0][0];
+        double y = (this->points1[i].y - this->imagePair.intrinsic_mtx0[1][2]) * 1.0 / this->imagePair.intrinsic_mtx0[0][0];
         point_vertex->setMarginalized(true);
         point_vertex->setEstimate(Eigen::Vector3d(x, y, 1.0));
         this->optimizer.addVertex(point_vertex);
     }
 
     // set up two cameras parameters
-    g2o::CameraParameters* camera1 = new g2o::CameraParameters(2945.377, Eigen::Vector2d(1284.862, 954.52), 0);
+    g2o::CameraParameters* camera1 = new g2o::CameraParameters(this->imagePair.intrinsic_mtx0[0][0], Eigen::Vector2d(this->imagePair.intrinsic_mtx0[0][2], this->imagePair.intrinsic_mtx0[1][2]), 0);
     camera1->setId(0);
     this->optimizer.addParameter(camera1);
 
-    g2o::CameraParameters* camera2 = new g2o::CameraParameters(2945.377, Eigen::Vector2d(1455.543, 954.52), 0);
+    g2o::CameraParameters* camera2 = new g2o::CameraParameters(this->imagePair.intrinsic_mtx1[0][0], Eigen::Vector2d(this->imagePair.intrinsic_mtx1[0][2], this->imagePair.intrinsic_mtx1[1][2]), 0);
     camera2->setId(1);
     this->optimizer.addParameter(camera2);
 
@@ -92,7 +96,7 @@ std::pair<cv::Mat, cv::Mat> BA::optimize(std::pair<cv::Mat, cv::Mat>& Transforma
     }
 
     // start optimizing
-    this->optimizer.setVerbose(true);
+    this->optimizer.setVerbose(false);
     this->optimizer.initializeOptimization();
     this->optimizer.optimize(iteration);
 

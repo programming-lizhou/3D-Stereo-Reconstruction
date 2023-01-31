@@ -7,3 +7,7 @@
 tree.txt
 CMakeLists.txt
 main.cpp
+src/nonfree.hpp
+src/xfeatures2d.hpp
+build/
+CMakeFiles

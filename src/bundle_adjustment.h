@@ -25,13 +25,16 @@
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 
+#include "dataloader_mb.h"
+
 
 class BA{
 public:
-    BA(std::vector<cv::Point2f>, std::vector<cv::Point2f>);
+    BA(Image_pair, std::vector<cv::Point2f>, std::vector<cv::Point2f>);
     std::pair<cv::Mat, cv::Mat> optimize(std::pair<cv::Mat, cv::Mat>& Transformation, int iteration);
 
 private:
+    Image_pair imagePair;
     std::vector<cv::Point2f> points1;
     std::vector<cv::Point2f> points2;
     g2o::SparseOptimizer optimizer;
