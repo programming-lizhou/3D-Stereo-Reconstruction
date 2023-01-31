@@ -8,10 +8,10 @@
 
 
 BA::BA(Image_pair ip, std::vector<cv::Point2f> points1, std::vector<cv::Point2f> points2) {
-    this->imagePair = ip;
+    this->imagePair = std::move(ip);
 
-    this->points1 = points1;
-    this->points2 = points2;
+    this->points1 = std::move(points1);
+    this->points2 = std::move(points2);
 
     // linear solver
     typedef g2o::BlockSolver< g2o::BlockSolverTraits<6,3> > Block; // dim of pose is 6, dim of landmark is 3

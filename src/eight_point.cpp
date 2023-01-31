@@ -6,6 +6,7 @@
 #include <Eigen/Dense>
 #include <cmath>
 #include <opencv2/core/eigen.hpp>
+#include <utility>
 
 using namespace cv;
 using namespace Eigen;
@@ -21,8 +22,8 @@ EightPointAlg::EightPointAlg(float (*im0)[3], float (*im1)[3], std::vector<cv::P
     this->k0 = k_0;
     this->k1 = k_1;
 
-    this->points0 = points0;
-    this->points1 = points1;
+    this->points0 = std::move(points0);
+    this->points1 = std::move(points1);
 }
 
 void EightPointAlg::computeFMtx(int mode) {
