@@ -15,12 +15,12 @@ Rectify::Rectify(Mat R, Mat t, float im0[][3], float im1[][3], Mat img0, Mat img
     k0.convertTo(k0, CV_64FC1);
     k1.convertTo(k1, CV_64FC1);
 
-    stereoRectify(k0, noArray(), k1, noArray(), img0.size(), R, t, R0, R1, P0, P1, Q);
+    stereoRectify(k0, noArray(), k1, noArray(), img0.size(), R, t, R0, R1, P0, P1, Q,CALIB_ZERO_DISPARITY);
     Mat map0x, map0y, map1x, map1y;
     Mat rimg0, rimg1;
 
-    initUndistortRectifyMap(k0, noArray(), R0, P0, img0.size(), CV_32FC1, map0x, map0y);
-    initUndistortRectifyMap(k1, noArray(), R1, P1, img1.size(), CV_32FC1, map1x, map1y);
+    initUndistortRectifyMap(k0, noArray(), R0, k0, img0.size(), CV_32FC1, map0x, map0y);
+    initUndistortRectifyMap(k1, noArray(), R1, k1, img1.size(), CV_32FC1, map1x, map1y);
 
     remap(img0, rimg0, map0x, map0y, INTER_LINEAR, BORDER_CONSTANT, Scalar());
     remap(img1, rimg1, map1x, map1y, INTER_LINEAR, BORDER_CONSTANT, Scalar());

@@ -36,12 +36,12 @@ int main() {
     Detector detector(imagePair);
 
 
-    detector.detector_SIFT();
+//    detector.detector_SIFT();
 
 //    detector.detector_SURF();
 //    detector.detector_ORB();
 //    detector.detector_FREAK();
-//    detector.detector_BRISK();
+   detector.detector_BRISK();
 //    detector.detector_KAZE();
 
     // do sparse matching
@@ -67,8 +67,8 @@ int main() {
 
     // ground truth
     cv::Mat gt_R = (cv::Mat_<double>(3, 3) << 1,0,0,
-                                              0,1,0,
-                                              0,0,1);
+            0,1,0,
+            0,0,1);
     cv::Mat gt_T = (cv::Mat_<double>(3, 1) << -1,0,0);
 
     // match points
@@ -111,26 +111,29 @@ int main() {
     cv::Mat R1 = eightPointAlg.getR();
     cv::Mat t1 = eightPointAlg.getT();
     std::pair<cv::Mat, cv::Mat> eightpoint_pair = std::make_pair(R1, t1);
-    std::pair<double, double> dist_eightpoint = evaluation.eval(eightpoint_pair);
+    std::pair<double, double> dist_eightpoint = evaluation.eval_transformation(eightpoint_pair);
     std::cout<<dist_eightpoint.first<< " " <<dist_eightpoint.second<<std::endl;
 
     // bundle adjustment to optimize pose
     BA ba = BA(imagePair, points0, points1);
     std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R1, t1);
-    std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 50);
-    std::pair<double, double> dist_eightpoint_BA = evaluation.eval(iter_transformation);
+    std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
+    std::pair<double, double> dist_eightpoint_BA = evaluation.eval_transformation(iter_transformation);
     std::cout << "BA result: " << std::endl;
     std::cout << iter_transformation.first << std::endl;
     std::cout << iter_transformation.second<< std::endl;
     std::cout<<dist_eightpoint_BA.first<< " " <<dist_eightpoint_BA.second<<std::endl;
 
+
     // rectification
     Rectify rectify = Rectify(iter_transformation.first, iter_transformation.second, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
     cv::imwrite("img111.png", rectify.getRectified_img0());
     cv::imwrite("img222.png", rectify.getRectified_img1());
+
+    // dense matching
     DenseMatching denseMatching(imagePair, rectify.getRectified_img0(), rectify.getRectified_img1());
 //    DenseMatching denseMatching(imagePair, detector.getImg0(), detector.getImg1());
-    denseMatching.match(1);
+    denseMatching.match(0); // 0:sgbm, 1:bm
     Mat disp = denseMatching.getDisp();
     Mat color_disp = denseMatching.getColorDisp();
     imwrite("res.png", disp);

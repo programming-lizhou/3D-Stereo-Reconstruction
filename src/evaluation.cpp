@@ -4,12 +4,14 @@
 
 #include "evaluation.h"
 
+#include <utility>
+
 Evaluation::Evaluation(cv::Mat gt_R, cv::Mat gt_T){
-    this->gt_R = gt_R;
-    this->gt_T = gt_T;
+    this->gt_R = std::move(gt_R);
+    this->gt_T = std::move(gt_T);
 }
 
-std::pair<double, double> Evaluation::eval(std::pair<cv::Mat, cv::Mat> Transformation){
+std::pair<double, double> Evaluation::eval_transformation(const std::pair<cv::Mat, cv::Mat>& Transformation){
     // set the reference matrix
     cv::Mat R = Transformation.first;
     cv::Mat T = Transformation.second;

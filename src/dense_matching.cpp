@@ -19,7 +19,7 @@ DenseMatching::DenseMatching(Image_pair ip, Mat img0, Mat img1) {
 }
 
 void DenseMatching::match(int mode) {
-    if(mode == 0) {
+    if(mode == 0) { // 0:sgbm, 1:bm
         Ptr<StereoSGBM> sgbm = StereoSGBM::create();
 
         int blockSize = 7;

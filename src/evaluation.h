@@ -14,7 +14,7 @@
 class Evaluation {
 public:
     Evaluation(cv::Mat, cv::Mat);
-    std::pair<double, double> eval(std::pair<cv::Mat, cv::Mat> Transformation);
+    std::pair<double, double> eval_transformation(const std::pair<cv::Mat, cv::Mat>& Transformation);
 private:
     cv::Mat gt_R;
     cv::Mat gt_T;
