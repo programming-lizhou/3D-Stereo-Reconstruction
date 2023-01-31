@@ -4,5 +4,19 @@
 
 #ifndef STEREO_RECONSTRUCTION_RECONSTRUCTION_H
 #define STEREO_RECONSTRUCTION_RECONSTRUCTION_H
+#include <opencv2/opencv.hpp>
+#include "dataloader_mb.h"
+
+class Reconstruction {
+public:
+    Reconstruction();
+    Reconstruction(cv::Mat, Image_pair ip);
+    void calculate_depth();
+    cv::Mat get_dmap();
+private:
+    cv::Mat disp_map;
+    cv::Mat depth_map;
+    Image_pair imagePair;
+};
 
 #endif //STEREO_RECONSTRUCTION_RECONSTRUCTION_H

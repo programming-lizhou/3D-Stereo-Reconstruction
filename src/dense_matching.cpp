@@ -6,6 +6,7 @@
 using namespace cv;
 
 
+
 DenseMatching::DenseMatching() = default;
 
 DenseMatching::DenseMatching(Image_pair ip, Mat img0, Mat img1) {

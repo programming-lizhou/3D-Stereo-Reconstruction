@@ -14,6 +14,8 @@
 #include "dense_matching.h"
 #include "bundle_adjustment.h"
 #include "evaluation.h"
+#include "reconstruction.h"
+
 using namespace cv::xfeatures2d;
 using namespace std;
 using namespace cv;
@@ -136,8 +138,8 @@ int main() {
     denseMatching.match(0); // 0:sgbm, 1:bm
     Mat disp = denseMatching.getDisp();
     Mat color_disp = denseMatching.getColorDisp();
-    imwrite("res.png", disp);
-    imwrite("color_res.png", color_disp);
+    imwrite("disparity.png", disp);
+    imwrite("color_disparity.png", color_disp);
 
     //here we show ground truth disp
     Mat img0 = imread(imagePair.view_path_0, 1);
@@ -146,11 +148,20 @@ int main() {
     DenseMatching denseMatching_gt(imagePair, img0, img1);
     denseMatching_gt.match(0);
     Mat disp_gt = denseMatching_gt.getDisp();
-    imwrite("res_gt.png", disp_gt);
+    imwrite("disparity_gt.png", disp_gt);
     Mat color_disp_gt = denseMatching_gt.getColorDisp();
-    imwrite("color_res_gt.png", color_disp_gt);
+    imwrite("color_disparity_gt.png", color_disp_gt);
 
+    //std::cout<<"disp:"<<disp_gt.type()<<std::endl;
 
+    cv::Mat test = imread("/home/drla/Documents/study/3d_scanning/project/3D-Stereo-Reconstruction/dataset/middlebury/Piano-perfect/Piano_disp0GT.png",0);
+
+    Reconstruction reconstruction(disp_gt, imagePair);
+    reconstruction.calculate_depth();
+    Mat dmap = reconstruction.get_dmap();
+    imwrite("depth_gt.png", dmap);
+
+    //std::cout << disp_gt <<std::endl;
 
     //-- Draw matches
     //   cout << sparseMatching.getGood_matches().size();
