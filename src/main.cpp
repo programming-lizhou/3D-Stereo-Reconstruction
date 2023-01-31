@@ -25,7 +25,7 @@ bool sort_distance(DMatch dMatch1, DMatch dMatch2) {
 int main() {
     // init dataloader
     Dataloader dataloader;
-    dataloader.setDataset_name("Recycle");
+    dataloader.setDataset_name("Bicycle1");
     dataloader.retrievePair();
     // get image pair
     Image_pair imagePair = dataloader.getPair();
@@ -57,8 +57,8 @@ int main() {
     Mat k1 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx1);
     cv::recoverPose(sparseMatching.getMatched0(), sparseMatching.getMatched1(), k0, cv::noArray(), k1, cv::noArray(), esstenM, RR, tt);
     //cout << esstenM << endl;
-    cout << RR << endl;
-    cout << tt << endl;
+    //cout << RR << endl;
+    //cout << tt << endl;
 
     // ground truth
     cv::Mat gt_R = (cv::Mat_<double>(3, 3) << 1,0,0,
@@ -97,17 +97,17 @@ int main() {
     Evaluation evaluation = Evaluation(gt_R, gt_T);
     EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
     // note, manually computing can work with Kaze, and BF
-    eightPointAlg.computeFMtx(0); // 0: manually, 1: opencv
-    eightPointAlg.recoverRt(0); // 0: eight, 1: five
+    eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
+    eightPointAlg.recoverRt(1); // 0: eight, 1: five
     cout << "eightpointalg result: " << endl;
     // cout << eightPointAlg.getE() << endl;
-    //cout << eightPointAlg.getR() << endl;
-    //cout << eightPointAlg.getT() << endl;
+    cout << eightPointAlg.getR() << endl;
+    cout << eightPointAlg.getT() << endl;
     cv::Mat R1 = eightPointAlg.getR();
     cv::Mat t1 = eightPointAlg.getT();
     std::pair<cv::Mat, cv::Mat> eightpoint_pair = std::make_pair(R1, t1);
     std::pair<double, double> dist_eightpoint = evaluation.eval(eightpoint_pair);
-    //std::cout<<dist_eightpoint.first<< " " <<dist_eightpoint.second<<std::endl;
+    std::cout<<dist_eightpoint.first<< " " <<dist_eightpoint.second<<std::endl;
 
     // bundle adjustment to optimize pose
     BA ba = BA(imagePair, points0, points1);
