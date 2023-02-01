@@ -115,7 +115,7 @@ int main() {
     std::cout<<dist_eightpoint.first<< " " <<dist_eightpoint.second<<std::endl;
 
     // bundle adjustment to optimize pose
-    BA ba = BA(imagePair, points0, points1);
+    BA ba(imagePair, points0, points1);
     std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R1, t1);
     std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
     std::pair<double, double> dist_eightpoint_BA = evaluation.eval_transformation(iter_transformation);

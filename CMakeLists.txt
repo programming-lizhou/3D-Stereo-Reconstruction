@@ -16,7 +16,7 @@ find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 # add ceres
-find_package(Ceres REQUIRED PATHS "/home/lz/Documents/clionprojects/3D-Stereo-Reconstruction/libs/ceres-solver-2.1.0")
+find_package(Ceres REQUIRED PATHS "/home/lz/cpp/3D-Stereo-Reconstruction/libs/ceres-solver-2.1.0")
 include_directories(${CERES_INCLUDE_DIRS})
 
 # add g2o
