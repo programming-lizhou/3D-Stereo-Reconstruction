@@ -51,6 +51,8 @@ void Reconstruction::calculate_depth() {
     }
     cv::Mat depth_norm;
     cv::normalize(dmap, depth_norm, 0.0, 1.0, cv::NORM_MINMAX);
+	//remove nah values, very important
+	cv::patchNaNs(depth_norm, 0.0);
     depth_norm *= 255.0;
     this->depth_map = depth_norm;
 }
@@ -94,6 +96,10 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
     Vertex* all_vertices = new Vertex[nrow * ncol];
     std::cout << "nrow: " << nrow << ", ncol: " << ncol << std::endl;
 	cv::Mat color_map = cv::imread(this->imagePair.view_path_0);
+
+	std::ofstream ost("output.txt");
+	ost << this->depth_map << std::endl;
+
     for(int i = 0; i < nrow; ++i) {
         for(int j = 0; j < ncol; ++j) {
             int idx = i * ncol + j;
