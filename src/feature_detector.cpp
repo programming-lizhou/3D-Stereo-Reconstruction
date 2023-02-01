@@ -40,7 +40,7 @@ void Detector::detector_SIFT() {
 
 }
 
-/*
+
 void Detector::detector_SURF() {
 
     // params for SURF
@@ -56,7 +56,7 @@ void Detector::detector_SURF() {
     detector->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
     detector->detectAndCompute(this->img1, noArray(), this->keypoints1, this->descriptors1);
 }
-*/
+
 void Detector::detector_ORB() {
     Ptr<ORB> detector = ORB::create();
     detector->detectAndCompute(this->img0, noArray(), this->keypoints0, this->descriptors0);
@@ -71,7 +71,7 @@ void Detector::detector_ORB() {
     }
 }
 
-//void Detector::detector_FREAK() {
+void Detector::detector_FREAK() {
     // Create a FREAK descriptor extractor
     /*
      * Adjust parameters:
@@ -80,7 +80,7 @@ void Detector::detector_ORB() {
      * 3. Adjust patternScale
      * 4. Adjust Octaves
      */
-/*    Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
+    Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
     detector->detect(this->img0, this->keypoints0);
     detector->detect(this->img1, this->keypoints1);
     // create descriptor
@@ -95,7 +95,7 @@ void Detector::detector_ORB() {
     if(descriptors1.type()!=CV_32F) {
         descriptors1.convertTo(descriptors1, CV_32F);
     }
-}*/
+}
 
 void Detector::detector_BRISK() {
     // Create a BRISK descriptor extractor

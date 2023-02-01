@@ -26,7 +26,7 @@ int main() {
     // init dataloader
     Dataloader dataloader;
 
-    dataloader.setDataset_name("Piano");
+    dataloader.setDataset_name("Recycle");
 
     dataloader.retrievePair();
     // get image pair
@@ -40,8 +40,8 @@ int main() {
 
 //    detector.detector_SURF();
 //    detector.detector_ORB();
-//    detector.detector_FREAK();
-   detector.detector_BRISK();
+    detector.detector_FREAK();
+//   detector.detector_BRISK();
 //    detector.detector_KAZE();
 
     // do sparse matching
