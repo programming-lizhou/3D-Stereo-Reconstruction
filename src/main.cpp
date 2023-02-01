@@ -157,6 +157,10 @@ int main() {
     Mat dmap = reconstruction.get_dmap();
     imwrite("depth_gt.png", dmap);
 
+    string filename = "mesh.off";
+    if(reconstruction.generate_mesh(filename)) {
+        cout << "cool" << endl;
+    }
     //-- Draw matches
     //   cout << sparseMatching.getGood_matches().size();
 /*
