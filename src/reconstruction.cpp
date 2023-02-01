@@ -80,7 +80,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
     Matrix3f depthIntrinsics;
     for(int i = 0; i < 3; ++i) {
         for(int j = 0; j < 3; ++j) {
-            depthIntrinsics(i, j) = this->imagePair.intrinsic_mtx1[i][j];
+            depthIntrinsics(i, j) = this->imagePair.intrinsic_mtx0[i][j];
         }
     }
     Matrix3f depthIntrinsicsInv = depthIntrinsics.inverse();
@@ -93,11 +93,11 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
     int ncol = this->depth_map.cols;
     Vertex* all_vertices = new Vertex[nrow * ncol];
     std::cout << "nrow: " << nrow << ", ncol: " << ncol << std::endl;
-	cv::Mat color_map = cv::imread(this->imagePair.view_path_1);
+	cv::Mat color_map = cv::imread(this->imagePair.view_path_0);
     for(int i = 0; i < nrow; ++i) {
         for(int j = 0; j < ncol; ++j) {
             int idx = i * ncol + j;
-            float depth = this->depth_map.ptr<float>(i)[j];
+            float depth = this->depth_map.ptr<float>(i)[j] / 255.0;
 			//transform to camera coordinate
 			float camera_X = (j - cX) / fX * depth;
 			float camera_Y = (i - cY) / fY * depth;
@@ -113,14 +113,15 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
         }
     }
 
-    // so far we have got the pointcloud, then we write the mesh
+    // so far we have got the point cloud, then we write the mesh
 
     float edgeThreshold = 0.01f; // 1cm
     unsigned int nVertices = nrow * ncol;
 
-    unsigned nFaces = 0;
+    unsigned int nFaces = 0;
 	//store the faces as vector<string>
-	std::vector<std::string> allfaces;
+    unsigned int total_faces = (nrow-1)*(ncol-1)*2; // a square contains two triangles
+    std::vector<std::string> allfaces = std::vector<std::string>(total_faces);
 //	std::ostringstream oss;
 	for(int i = 0; i < nrow - 1; i++) {
 		for(int j = 0; j < ncol - 1; j++) {
@@ -140,18 +141,19 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
 			int idx4 = idx3 - 1;
 			std::string face;
 			if(isValid(all_vertices, idx1, idx2, idx4, edgeThreshold)) {
-				nFaces++;
-				face = "3 " + std::to_string(idx1) + " " + std::to_string(idx4) + " " + std::to_string(idx2);
+
+                allfaces[nFaces] = "3 " + std::to_string(idx1) + " " + std::to_string(idx2) + " " + std::to_string(idx4);
+                nFaces++;
 //				oss << "3 " << idx1 << " " << idx2 << " " << idx4;
-				allfaces.push_back(face);
+
 //				oss.clear();
 //				std::cout << "t1" << std::endl;
 			}
 			if(isValid(all_vertices, idx2, idx3, idx4, edgeThreshold)) {
-				nFaces++;
-				face = "3 " + std::to_string(idx4) + " " + std::to_string(idx3) + " " + std::to_string(idx2);
+
+                allfaces[nFaces] = "3 " + std::to_string(idx2) + " " + std::to_string(idx3) + " " + std::to_string(idx4);
 //				oss << "3 " << idx2 << " " << idx3 << " " << idx4;
-				allfaces.push_back(face);
+                nFaces++;
 //				oss.clear();
 //				std::cout << "t2" << std::endl;
 			}
@@ -187,7 +189,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
 					<< (int)all_vertices[idx].color[2] << " "
 					<< (int)all_vertices[idx].color[3] << std::endl;
 
-            std::cout << "Point " << i << " " << j << " done" << std::endl;
+            std::cout << "Point " << i << " " << j << " done" << ' ' << all_vertices[idx].position[0] <<' ' << (int)all_vertices[idx].color[0]<< std::endl;
 		}
 	}
 
