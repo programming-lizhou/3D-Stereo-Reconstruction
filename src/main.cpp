@@ -14,6 +14,7 @@
 #include "dense_matching.h"
 #include "bundle_adjustment.h"
 #include "evaluation.h"
+#include "reconstruction.h"
 using namespace cv::xfeatures2d;
 using namespace std;
 using namespace cv;
@@ -26,7 +27,7 @@ int main() {
     // init dataloader
     Dataloader dataloader;
 
-    dataloader.setDataset_name("Recycle");
+    dataloader.setDataset_name("Piano");
 
     dataloader.retrievePair();
     // get image pair
@@ -40,8 +41,8 @@ int main() {
 
 //    detector.detector_SURF();
 //    detector.detector_ORB();
-    detector.detector_FREAK();
-//   detector.detector_BRISK();
+//    detector.detector_FREAK();
+    detector.detector_BRISK();
 //    detector.detector_KAZE();
 
     // do sparse matching
@@ -62,8 +63,9 @@ int main() {
     Mat k1 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx1);
     cv::recoverPose(sparseMatching.getMatched0(), sparseMatching.getMatched1(), k0, cv::noArray(), k1, cv::noArray(), esstenM, RR, tt);
     //cout << esstenM << endl;
-    //cout << RR << endl;
-    //cout << tt << endl;
+    cout << "Five point alg:" << endl;
+    cout << RR << endl;
+    cout << tt << endl;
 
     // ground truth
     cv::Mat gt_R = (cv::Mat_<double>(3, 3) << 1,0,0,
@@ -116,7 +118,7 @@ int main() {
 
     // bundle adjustment to optimize pose
     BA ba(imagePair, points0, points1);
-    std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R1, t1);
+    std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(RR, tt);
     std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
     std::pair<double, double> dist_eightpoint_BA = evaluation.eval_transformation(iter_transformation);
     std::cout << "BA result: " << std::endl;
@@ -150,7 +152,10 @@ int main() {
     Mat color_disp_gt = denseMatching_gt.getColorDisp();
     imwrite("color_res_gt.png", color_disp_gt);
 
-
+    Reconstruction reconstruction(disp_gt, imagePair);
+    reconstruction.calculate_depth();
+    Mat dmap = reconstruction.get_dmap();
+    imwrite("depth_gt.png", dmap);
 
     //-- Draw matches
     //   cout << sparseMatching.getGood_matches().size();
