@@ -210,6 +210,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
 
 	// close file
 	outFile.close();
+	delete[] all_vertices;
 
     return true;
 
