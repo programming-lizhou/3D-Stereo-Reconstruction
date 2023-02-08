@@ -15,6 +15,7 @@
 #include "bundle_adjustment.h"
 #include "evaluation.h"
 #include "reconstruction.h"
+#include "PFMReadWrite.h"
 using namespace cv::xfeatures2d;
 using namespace std;
 using namespace cv;
@@ -63,6 +64,7 @@ int main() {
     Mat k1 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx1);
     cv::recoverPose(sparseMatching.getMatched0(), sparseMatching.getMatched1(), k0, cv::noArray(), k1, cv::noArray(), esstenM, RR, tt);
     //cout << esstenM << endl;
+
     cout << "Five point alg:" << endl;
     cout << RR << endl;
     cout << tt << endl;
@@ -101,7 +103,6 @@ int main() {
 */
 
     // eight point algorithm
-    Evaluation evaluation = Evaluation(gt_R, gt_T);
     EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
     // note, manually computing can work with Kaze, and BF
     eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
@@ -113,18 +114,15 @@ int main() {
     cv::Mat R1 = eightPointAlg.getR();
     cv::Mat t1 = eightPointAlg.getT();
     std::pair<cv::Mat, cv::Mat> eightpoint_pair = std::make_pair(R1, t1);
-    std::pair<double, double> dist_eightpoint = evaluation.eval_transformation(eightpoint_pair);
-    std::cout<<dist_eightpoint.first<< " " <<dist_eightpoint.second<<std::endl;
+
 
     // bundle adjustment to optimize pose
     BA ba(imagePair, points0, points1);
     std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(RR, tt);
     std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
-    std::pair<double, double> dist_eightpoint_BA = evaluation.eval_transformation(iter_transformation);
     std::cout << "BA result: " << std::endl;
     std::cout << iter_transformation.first << std::endl;
     std::cout << iter_transformation.second<< std::endl;
-    std::cout<<dist_eightpoint_BA.first<< " " <<dist_eightpoint_BA.second<<std::endl;
 
 
     // rectification
@@ -152,6 +150,18 @@ int main() {
     Mat color_disp_gt = denseMatching_gt.getColorDisp();
     imwrite("color_res_gt.png", color_disp_gt);
 
+    Mat img = loadPFM(imagePair.disparity_path_0);
+    float inf = std::numeric_limits<float>::infinity();
+    Mat mask = img==inf;
+    img.setTo(0.0, mask);
+    imwrite("disp_given.png", img);
+//    cout << img << endl;
+    
+    Evaluation evaluation(gt_R, gt_T, imagePair);
+    cout << evaluation.eval_bad(disp_gt, 1.0) << endl;
+    cout << evaluation.eval_rms(img) << endl;
+    
+/*
     Reconstruction reconstruction(disp_gt, imagePair);
     reconstruction.calculate_depth();
     Mat dmap = reconstruction.get_dmap();
@@ -161,6 +171,8 @@ int main() {
     if(reconstruction.generate_mesh(filename)) {
         cout << "cool" << endl;
     }
+
+*/
     //-- Draw matches
     //   cout << sparseMatching.getGood_matches().size();
 /*

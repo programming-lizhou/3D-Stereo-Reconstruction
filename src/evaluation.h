@@ -10,14 +10,19 @@
 // for opencv
 #include <opencv2/opencv.hpp>
 #include "opencv2/features2d.hpp"
+#include "dataloader_mb.h"
 
 class Evaluation {
 public:
-    Evaluation(cv::Mat, cv::Mat);
+    Evaluation(cv::Mat, cv::Mat, Image_pair ip);
     std::pair<double, double> eval_transformation(const std::pair<cv::Mat, cv::Mat>& Transformation);
+    double eval_bad(cv::Mat disp, float eval);
+    double eval_rms(cv::Mat disp);
+
 private:
     cv::Mat gt_R;
     cv::Mat gt_T;
+    cv::Mat gt_disp;
 };
 
 
