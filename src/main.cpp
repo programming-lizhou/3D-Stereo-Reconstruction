@@ -38,12 +38,12 @@ int main() {
     Detector detector(imagePair);
 
 
-//    detector.detector_SIFT();
+    detector.detector_SIFT();
 
 //    detector.detector_SURF();
 //    detector.detector_ORB();
 //    detector.detector_FREAK();
-    detector.detector_BRISK();
+//    detector.detector_BRISK();
 //    detector.detector_KAZE();
 
     // do sparse matching
@@ -144,7 +144,7 @@ int main() {
     Mat img1 = imread(imagePair.view_path_1, 1);
     //DenseMatching denseMatching_gt(imagePair, detector.getImg0(), detector.getImg1());
     DenseMatching denseMatching_gt(imagePair, img0, img1);
-    denseMatching_gt.match(0);
+    denseMatching_gt.match(1);
     Mat disp_gt = denseMatching_gt.getDisp();
     imwrite("res_gt.png", disp_gt);
     Mat color_disp_gt = denseMatching_gt.getColorDisp();
@@ -158,7 +158,9 @@ int main() {
 //    cout << img << endl;
     
     Evaluation evaluation(gt_R, gt_T, imagePair);
+    cout << evaluation.eval_bad(disp_gt, 0.5) << endl;
     cout << evaluation.eval_bad(disp_gt, 2.0) << endl;
+    cout << evaluation.eval_bad(disp_gt, 4.0) << endl;
     cout << evaluation.eval_rms(disp_gt) << endl;
     
 /*
@@ -171,8 +173,8 @@ int main() {
     if(reconstruction.generate_mesh(filename)) {
         cout << "cool" << endl;
     }
-
 */
+
     //-- Draw matches
     //   cout << sparseMatching.getGood_matches().size();
 /*

@@ -50,6 +50,23 @@ std::pair<double, double> Evaluation::eval_transformation(const std::pair<cv::Ma
     return distance;
 }
 
+
+int get_blocked_width(cv::Mat disp) {
+    int width = INT_MAX;
+    int rows = disp.rows;
+    int cols = disp.cols;
+    for(int i = 0; i < rows; ++i) {
+        for(int j = 0; j < cols; ++j) {
+            float val = disp.ptr<uchar>(i)[j];
+            if(val != 0.0) {
+                width = std::min(width, j);
+                break;
+            }
+        }
+    }
+    return width;
+}
+
 // eval bad0.5, bad2.0, ...
 double Evaluation::eval_bad(cv::Mat disp, float eval) {
     //first make sure the size is equal
@@ -58,12 +75,13 @@ double Evaluation::eval_bad(cv::Mat disp, float eval) {
     int count = 0;
     int rows = gt_disp.rows;
     int cols = gt_disp.cols;
-
+    int blocked_width = get_blocked_width(disp);
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
+            if(j < blocked_width) continue;
             float val = disp.ptr<uchar>(i)[j];
             float gt_val = gt_disp.at<float>(i, j);
-            if(abs(val - gt_val) > eval && val != 0.0 && gt_val != 0.0) {
+            if(abs(val - gt_val) > eval && gt_val != 0.0) {
                 ++count;
             }
         }
@@ -72,6 +90,7 @@ double Evaluation::eval_bad(cv::Mat disp, float eval) {
 
 }
 
+
 double Evaluation::eval_rms(cv::Mat disp) {
     //first make sure the size is equal
     assert(disp.size() == this->gt_disp.size());
@@ -79,14 +98,16 @@ double Evaluation::eval_rms(cv::Mat disp) {
     double result = 0.0;
     int rows = gt_disp.rows;
     int cols = gt_disp.cols;
-
+    int blocked_width = get_blocked_width(disp);
+    std::cout << blocked_width << std::endl;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
+            if(j < blocked_width) continue;
             float val = disp.ptr<uchar>(i)[j];
             float gt_val = gt_disp.at<float>(i, j);
             result += pow(val - gt_val, 2);
         }
     }
-    return sqrt(result / (rows * cols * 1.0));
+    return sqrt(result / (rows * (cols - blocked_width) * 1.0));
 
 }
