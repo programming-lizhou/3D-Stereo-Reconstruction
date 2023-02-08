@@ -158,8 +158,8 @@ int main() {
 //    cout << img << endl;
     
     Evaluation evaluation(gt_R, gt_T, imagePair);
-    cout << evaluation.eval_bad(disp_gt, 1.0) << endl;
-    cout << evaluation.eval_rms(img) << endl;
+    cout << evaluation.eval_bad(disp_gt, 2.0) << endl;
+    cout << evaluation.eval_rms(disp_gt) << endl;
     
 /*
     Reconstruction reconstruction(disp_gt, imagePair);

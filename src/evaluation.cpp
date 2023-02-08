@@ -63,7 +63,7 @@ double Evaluation::eval_bad(cv::Mat disp, float eval) {
         for (int j = 0; j < cols; j++) {
             float val = disp.ptr<uchar>(i)[j];
             float gt_val = gt_disp.at<float>(i, j);
-            if(abs(val - gt_val) > eval) {
+            if(abs(val - gt_val) > eval && val != 0.0 && gt_val != 0.0) {
                 ++count;
             }
         }
