@@ -115,7 +115,7 @@ std::pair<cv::Mat, cv::Mat> BA::optimize(std::pair<cv::Mat, cv::Mat>& Transforma
     cv::Mat iter_translation = (cv::Mat_<double>(3, 1) << translation[0], translation[1], translation[2]);
 
     // build transformation matrix in a pair of (R,T)
-    std::pair iter_transformation = std::make_pair(iter_rotation, iter_translation);
+    std::pair<cv::Mat, cv::Mat> iter_transformation = std::make_pair(iter_rotation, iter_translation);
     return iter_transformation;
 }
 

@@ -3,10 +3,9 @@
 /cmake-build-debug-coverage/
 /cmake-build-debug/
 .idea
+.vscode
 !.gitignore
 tree.txt
-CMakeLists.txt
-main.cpp
 src/nonfree.hpp
 src/xfeatures2d.hpp
 build/

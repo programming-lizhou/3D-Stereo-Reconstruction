@@ -7,12 +7,16 @@
 #include <opencv2/opencv.hpp>
 #include "dataloader_mb.h"
 
+
+
 class Reconstruction {
 public:
     Reconstruction();
-    Reconstruction(cv::Mat, Image_pair ip);
+    Reconstruction(cv::Mat, Image_pair);
     void calculate_depth();
     cv::Mat get_dmap();
+    bool generate_mesh(const std::string&);
+
 private:
     cv::Mat disp_map;
     cv::Mat depth_map;

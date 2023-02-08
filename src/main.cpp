@@ -28,7 +28,7 @@ int main() {
     // init dataloader
     Dataloader dataloader;
 
-    dataloader.setDataset_name("Piano");
+    dataloader.setDataset_name("Recycle");
 
     dataloader.retrievePair();
     // get image pair
@@ -43,7 +43,7 @@ int main() {
 //    detector.detector_SURF();
 //    detector.detector_ORB();
 //    detector.detector_FREAK();
-   detector.detector_BRISK();
+    detector.detector_BRISK();
 //    detector.detector_KAZE();
 
     // do sparse matching
@@ -64,8 +64,9 @@ int main() {
     Mat k1 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx1);
     cv::recoverPose(sparseMatching.getMatched0(), sparseMatching.getMatched1(), k0, cv::noArray(), k1, cv::noArray(), esstenM, RR, tt);
     //cout << esstenM << endl;
-    //cout << RR << endl;
-    //cout << tt << endl;
+    cout << "Five point alg:" << endl;
+    cout << RR << endl;
+    cout << tt << endl;
 
     // ground truth
     cv::Mat gt_R = (cv::Mat_<double>(3, 3) << 1,0,0,
@@ -117,7 +118,7 @@ int main() {
     std::cout<<dist_eightpoint.first<< " " <<dist_eightpoint.second<<std::endl;
 
     // bundle adjustment to optimize pose
-    BA ba = BA(imagePair, points0, points1);
+    BA ba(imagePair, points0, points1);
     std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R1, t1);
     std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
     std::pair<double, double> dist_eightpoint_BA = evaluation.eval_transformation(iter_transformation);
@@ -128,7 +129,7 @@ int main() {
 
 
     // rectification
-    Rectify rectify = Rectify(iter_transformation.first, iter_transformation.second, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
+    Rectify rectify = Rectify(gt_R, gt_T, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
     cv::imwrite("img111.png", rectify.getRectified_img0());
     cv::imwrite("img222.png", rectify.getRectified_img1());
 
@@ -161,21 +162,23 @@ int main() {
     Mat dmap = reconstruction.get_dmap();
     imwrite("depth_gt.png", dmap);
 
-    //std::cout << disp_gt <<std::endl;
+/*
+    string filename = "mesh.off";
+    if(reconstruction.generate_mesh(filename)) {
+        cout << "cool" << endl;
+    }*/
 
     //-- Draw matches
-    //   cout << sparseMatching.getGood_matches().size();
-/*
     Mat img_matches;
-    drawMatches(detector.getImg0(), detector.getKeypoints0(), detector.getImg1(), detector.getKeypoints1(), sparseMatching.getGood_matches(), img_matches, Scalar::all(-1),
-                 Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+    drawMatches(rectify.getRectified_img0(), detector.getKeypoints0(), rectify.getRectified_img1(), detector.getKeypoints1(), seletect_matches, img_matches, Scalar::all(-1),
+                Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
     //-- Show detected matches
     namedWindow("Good Matches", 0);
     resizeWindow("Good Matches", 1000, 1000);
-    imshow("Good Matches", img_matches );
-    waitKey();
-*/
-    return 0;
+    imwrite("rectify.png", img_matches);
 
+    // draw epipolar lines
+
+    return 0;
 
 }

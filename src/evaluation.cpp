@@ -35,7 +35,7 @@ std::pair<double, double> Evaluation::eval_transformation(const std::pair<cv::Ma
     dist_T /= std::pow(dist_T, 0.5);
 
     // build transformation matrix in a pair of distance (R,T)
-    std::pair distance = std::make_pair(dist_R, dist_T);
+    std::pair<double, double> distance = std::make_pair(dist_R, dist_T);
     return distance;
 }
 
