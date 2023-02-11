@@ -2,6 +2,7 @@
 /dataset/middlebury/*
 /cmake-build-debug-coverage/
 /cmake-build-debug/
+/results/*
 .idea
 .vscode
 !.gitignore

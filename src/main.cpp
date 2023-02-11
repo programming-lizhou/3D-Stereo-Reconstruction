@@ -236,28 +236,78 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
     ofs.close();
  }
 
-void mesh_generation() {
-    
-}
+
+// if 0, eval, else generate mesh
+int eval_or_mesh = 0;
 
 int main() {
+if(eval_or_mesh == 0) 
+{
     // init dataloader
     Dataloader dataloader;
     dataloader.setDataset_name("Piano");
     dataloader.retrievePair();
 
     // evaluate feature detection and matching
-//    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, false);
-//    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, true);
+    //    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, false);
+    //    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, true);
 
     // evaluate pose R, t
-//    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, true);
-//    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, true, true);
+    //    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, true);
+    //    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, true, true);
 
     // evaluate dense matching
     eval_DM(dataloader, DENSEMATCHING::SGBM, true);
     eval_DM(dataloader, DENSEMATCHING::BM, true);
     return 0;
+}
+    //datasets that we want to generate mesh
+    vector<string> dataset_names{"Piano", "Recycle", "Playtable"};
+for(auto& str : dataset_names) {
+    Dataloader dataloader;
+    dataloader.setDataset_name(str);
+    dataloader.retrievePair();
 
+    Image_pair imagePair = dataloader.getPair();
+
+    Detector detector(imagePair);
+    detector.detector_SIFT();
+
+    SparseMatching sparseMatching(0, NORM_L2);
+    sparseMatching.match(detector.getDescriptors0(), detector.getDescriptors1(), detector.getKeypoints0(), detector.getKeypoints1());
+    sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
+
+    EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
+    eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
+    eightPointAlg.recoverRt(1); // 0: eight, 1: five
+
+    cv::Mat R = eightPointAlg.getR();
+    cv::Mat T = eightPointAlg.getT();
+
+    BA ba(imagePair, sparseMatching.getMatched0(), sparseMatching.getMatched1());
+    std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R, T);
+    std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
+    std::cout << "BA result: " << std::endl;
+    std::cout << iter_transformation.first << std::endl;
+    std::cout << iter_transformation.second << std::endl;
+    R = iter_transformation.first;
+    T = iter_transformation.second;
+
+    Rectify rectify = Rectify(R, T, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
+
+    DenseMatching denseMatching(imagePair, rectify.getRectified_img0(), rectify.getRectified_img1());
+    denseMatching.match(0); //sgbm
+    Mat disp = denseMatching.getDisp();
+    
+    Reconstruction reconstruction(disp, imagePair);
+    reconstruction.calculate_depth();
+
+    string filename = result_dir + str + ".off";
+    if(reconstruction.generate_mesh(filename)) {
+        cout << "cool!!!" << endl;
+    }
+}
+
+    return 0;
 
 }

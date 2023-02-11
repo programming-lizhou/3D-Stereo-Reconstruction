@@ -1,4 +1,0 @@
-Piano, With RANSAC, Five Point Algorithm, With BA, L2 distance of R, T : 0.000437704, 0.00319019
-Piano, With RANSAC, Eight Point Algorithm, With BA, L2 distance of R, T : 0.000437704, 0.00319019
-Piano, Without RANSAC, Five Point Algorithm, With BA, L2 distance of R, T : 0.00466235, 1.99959
-Piano, With RANSAC, Eight Point Algorithm, With BA, L2 distance of R, T : 0.000437704, 0.00319019

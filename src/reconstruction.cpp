@@ -94,7 +94,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
     int nrow = this->depth_map.rows;
     int ncol = this->depth_map.cols;
     Vertex* all_vertices = new Vertex[nrow * ncol];
-    std::cout << "nrow: " << nrow << ", ncol: " << ncol << std::endl;
+//    std::cout << "nrow: " << nrow << ", ncol: " << ncol << std::endl;
 	cv::Mat color_map = cv::imread(this->imagePair.view_path_0);
 
 	std::ofstream ost("output.txt");
@@ -115,7 +115,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
             cv::Vec3b color = color_map.at<cv::Vec3b>(i, j);
             all_vertices[idx].color = Vector4uc(color[2], color[1], color[0], 255);
 
-            std::cout << "Point " << i << " " << j << " done" << std::endl;
+//            std::cout << "Point " << i << " " << j << " done" << std::endl;
         }
     }
 
@@ -163,7 +163,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
 //				oss.clear();
 //				std::cout << "t2" << std::endl;
 			}
-            std::cout << "Point " << i << " " << j << " done" << std::endl;
+//            std::cout << "Point " << i << " " << j << " done" << std::endl;
 		}
 	}
 
@@ -195,7 +195,7 @@ bool Reconstruction::generate_mesh(const std::string& filename) {
 					<< (int)all_vertices[idx].color[2] << " "
 					<< (int)all_vertices[idx].color[3] << std::endl;
 
-            std::cout << "Point " << i << " " << j << " done" << ' ' << all_vertices[idx].position[0] <<' ' << (int)all_vertices[idx].color[0]<< std::endl;
+//            std::cout << "Point " << i << " " << j << " done" << ' ' << all_vertices[idx].position[0] <<' ' << (int)all_vertices[idx].color[0]<< std::endl;
 		}
 	}
 
