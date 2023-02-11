@@ -238,7 +238,7 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
 
 
 // if 0, eval, else generate mesh
-int eval_or_mesh = 1;
+int eval_or_mesh = 0;
 
 //datasets that we want to generate mesh
 vector<string> dataset_names{"Playtable"};
