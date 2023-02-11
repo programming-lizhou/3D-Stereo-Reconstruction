@@ -53,8 +53,14 @@ void DenseMatching::match(int mode) {
     } else if(mode == 1) {
         int numDisparities = 256;
         int blockSize = 25;
+        int preFilterCap = 58;
+        int uniquenessRatio = 10;
 
         Ptr<StereoBM> bm = StereoBM::create(numDisparities, blockSize);
+
+        bm->setPreFilterCap(preFilterCap);
+        bm->setUniquenessRatio(uniquenessRatio);
+
         bm->compute(this->rectified_img0, this->rectified_img1, this->disparity_map);
         this->disparity_map.convertTo(this->disparity_map, CV_8U, 255/(numDisparities*16.));
         applyColorMap(this->disparity_map, this->color_disparity_map, cv::COLORMAP_JET);
