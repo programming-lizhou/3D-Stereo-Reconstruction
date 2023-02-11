@@ -18,7 +18,7 @@ public:
     std::pair<double, double> eval_transformation(const std::pair<cv::Mat, cv::Mat>& Transformation);
     double eval_bad(cv::Mat disp, float eval);
     double eval_rms(cv::Mat disp);
-
+    cv::Mat get_gt_disp();
 private:
     cv::Mat gt_R;
     cv::Mat gt_T;

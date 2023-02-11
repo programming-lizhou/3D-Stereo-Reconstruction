@@ -111,3 +111,7 @@ double Evaluation::eval_rms(cv::Mat disp) {
     return sqrt(result / (rows * (cols - blocked_width) * 1.0));
 
 }
+
+cv::Mat Evaluation::get_gt_disp() {
+    return this->gt_disp;
+}

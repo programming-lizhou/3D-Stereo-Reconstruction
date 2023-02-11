@@ -20,173 +20,243 @@ using namespace cv::xfeatures2d;
 using namespace std;
 using namespace cv;
 
+enum Detectors{SIFT, SURF, ORB, FREAK, BRISK, KAZE};
+enum Matchers{BF, FLANN};
+enum POSECALCULATION{EIGHT_POINT, FIVE_POINT};
+enum DENSEMATCHING{BM, SGBM};
+
+
+const string result_dir = "../results/";
+
 bool sort_distance(DMatch dMatch1, DMatch dMatch2) {
     return dMatch1.distance < dMatch2.distance;
 }
 
-int main() {
-    // init dataloader
-    Dataloader dataloader;
+void eval_feature_detection_and_matching(Dataloader& dataloader, Detectors det_type, Matchers matcher_type, bool ransac) {
+    string filename = result_dir + "eval_feature_detection_and_matching.txt";
+    ofstream ofs;
+    ofs.open(filename, ios::out | ios::app);
+    ofs << dataloader.getDataset_name() << ", ";
 
-    dataloader.setDataset_name("Piano");
-
-    dataloader.retrievePair();
-    // get image pair
     Image_pair imagePair = dataloader.getPair();
-
-    // init detector
     Detector detector(imagePair);
+    switch(det_type) {
+        case Detectors::SIFT:
+            detector.detector_SIFT();
+            ofs << "SIFT" << ", ";
+            break;
+        case Detectors::SURF:
+            detector.detector_SURF();
+            ofs << "SURF" << ", ";
+            break;
+        case Detectors::ORB:
+            detector.detector_ORB();
+            ofs << "ORB" << ", ";
+            break;
+        case Detectors::FREAK:
+            detector.detector_FREAK();
+            ofs << "FREAK" << ", ";
+            break;
+        case Detectors::BRISK:
+            detector.detector_BRISK();
+            ofs << "BRISK" << ", ";
+            break;
+        case Detectors::KAZE:
+            detector.detector_KAZE();
+            ofs << "KAZE" << ", ";
+            break;
+    }
 
+    int matcher_num;
+    switch(matcher_type) {
+        case Matchers::BF:
+            matcher_num = 0;
+            ofs << "BF Matcher" << ", ";
+            break;
+        case Matchers::FLANN:
+            matcher_num = 1;
+            ofs << "FLANN Matcher" << ", ";
+            break;
+    }
 
+    ofs << "Number of KeyPoints:" << detector.getKeypoints0().size() << ", ";
+
+    SparseMatching sparseMatching(matcher_num, NORM_L2);
+    sparseMatching.match(detector.getDescriptors0(), detector.getDescriptors1(), detector.getKeypoints0(), detector.getKeypoints1());
+
+    if(ransac) {
+        sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
+        ofs << "With RANSAC" << ", ";
+    } else {
+        ofs << "Without RANSAC" << ", ";
+    }
+    
+    ofs << "Number of Matches:" << sparseMatching.getGood_matches().size() << endl;
+
+    ofs.close();
+
+}
+
+void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool ba) {
+    string filename = result_dir + "eval_pose.txt";
+    ofstream ofs;
+    ofs.open(filename, ios::out | ios::app);
+    ofs << dataloader.getDataset_name() << ", ";
+
+    Image_pair imagePair = dataloader.getPair();
+    Detector detector(imagePair);
     detector.detector_SIFT();
-
-//    detector.detector_SURF();
-//    detector.detector_ORB();
-//    detector.detector_FREAK();
-//    detector.detector_BRISK();
-//    detector.detector_KAZE();
-
-    // do sparse matching
     SparseMatching sparseMatching(0, NORM_L2);
     sparseMatching.match(detector.getDescriptors0(), detector.getDescriptors1(), detector.getKeypoints0(), detector.getKeypoints1());
-    // whether to apply -------------ransac-------------, if not, comment it
-    sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
 
-    vector<DMatch> seletect_matches = sparseMatching.getGood_matches(); // here: unsorted
-//    vector<DMatch> seletect_matches = sparseMatching.get_sorted(); // here: sorted
+    if(ransac) {
+        sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
+        ofs << "With RANSAC" << ", ";
+    } else {
+        ofs << "Without RANSAC" << ", ";
+    }
 
-
-    // sparse matching
-    cv::Mat RR;
-    cv::Mat tt;
-    cv::Mat esstenM;
-    Mat k0 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx0);
-    Mat k1 = Mat(3, 3, CV_32FC1, imagePair.intrinsic_mtx1);
-    cv::recoverPose(sparseMatching.getMatched0(), sparseMatching.getMatched1(), k0, cv::noArray(), k1, cv::noArray(), esstenM, RR, tt);
-    //cout << esstenM << endl;
-
-    cout << "Five point alg:" << endl;
-    cout << RR << endl;
-    cout << tt << endl;
-
-    // ground truth
+    vector<DMatch> seletect_matches = sparseMatching.getGood_matches();
     cv::Mat gt_R = (cv::Mat_<double>(3, 3) << 1,0,0,
             0,1,0,
             0,0,1);
     cv::Mat gt_T = (cv::Mat_<double>(3, 1) << -1,0,0);
 
-    // match points
-    std::vector<cv::Point2f> points0;
-    std::vector<cv::Point2f> points1;
-    sort(seletect_matches.begin(), seletect_matches.end(), sort_distance);
-    std::vector<cv::DMatch> matches;
-    for (int i=0;i<seletect_matches.size();i++){
-        matches.push_back(seletect_matches[i]);
-    }
-    std::cout<<"number of matched points: "<<matches.size()<<std::endl;
-    for(int i=0;i<matches.size();i++){
-        points0.push_back(detector.getKeypoints0()[matches[i].queryIdx].pt);
-        points1.push_back(detector.getKeypoints1()[matches[i].trainIdx].pt);
-    }
-
-    /*
-    // get evaluation result under different settings
-    cv::Mat R_temp = (cv::Mat_<double>(3, 3) << 0.9999957213846333, 0.001196905861280878, 0.002669200027366238,
-    -0.001186252441654455, 0.9999913392731211, -0.003989258564518551,
-    -0.002673951677111853, 0.00398607515096581, 0.9999884805273105);
-    cv::Mat t_temp = (cv::Mat_<double>(3, 1) << -0.9988266035394342,
-    0.0480149818016224,
-    0.006322782968597357);
-    std::pair<cv::Mat, cv::Mat> temp_pair = std::make_pair(R_temp, t_temp);
-    std::pair<double, double> temp = evaluation.eval(temp_pair);
-    std::cout<<temp.first<< " " <<temp.second<<std::endl;
-*/
-
-    // eight point algorithm
+    cv::Mat R;
+    cv::Mat T;
+    
     EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
-    // note, manually computing can work with Kaze, and BF
+
+    if(method == POSECALCULATION::EIGHT_POINT) {
+        ofs << "Eight Point Algorithm" << ", ";
+        eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
+        eightPointAlg.recoverRt(0); // 0: eight, 1: five
+    } else if(method == POSECALCULATION::FIVE_POINT) {
+        ofs << "Five Point Algorithm" << ", ";
+        eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
+        eightPointAlg.recoverRt(1); // 0: eight, 1: five
+    }
+
+    R = eightPointAlg.getR();
+    T = eightPointAlg.getT();
+
+    std::cout << "Without BA result: " << std::endl;
+    std::cout << R << std::endl;
+    std::cout << T << std::endl;
+
+    if(ba) {
+        ofs << "With BA" << ", ";
+        BA ba(imagePair, sparseMatching.getMatched0(), sparseMatching.getMatched1());
+        std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R, T);
+        std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
+        std::cout << "BA result: " << std::endl;
+        std::cout << iter_transformation.first << std::endl;
+        std::cout << iter_transformation.second<< std::endl;
+        R = iter_transformation.first;
+        T = iter_transformation.second;
+    }
+    std::pair<cv::Mat, cv::Mat> calculated_pair = std::make_pair(R, T);
+    Evaluation evaluation(gt_R, gt_T, imagePair);
+    pair<double, double> l2_dist = evaluation.eval_transformation(calculated_pair);
+    ofs << "L2 distance of R, T : " << l2_dist.first << ", " << l2_dist.second << endl;
+    
+    ofs.close();
+}
+
+ void eval_DM(Dataloader& dataloader, DENSEMATCHING method, bool ba) {
+    string filename = result_dir + "eval_dense_matching.txt";
+    ofstream ofs;
+    ofs.open(filename, ios::out | ios::app);
+    ofs << dataloader.getDataset_name() << ", ";
+
+    Image_pair imagePair = dataloader.getPair();
+    Detector detector(imagePair);
+    detector.detector_SIFT();
+    SparseMatching sparseMatching(0, NORM_L2);
+    sparseMatching.match(detector.getDescriptors0(), detector.getDescriptors1(), detector.getKeypoints0(), detector.getKeypoints1());
+    sparseMatching.ransac(detector.getKeypoints0(), detector.getKeypoints1());
+
+    vector<DMatch> seletect_matches = sparseMatching.getGood_matches();
+    cv::Mat gt_R = (cv::Mat_<double>(3, 3) << 1,0,0,
+            0,1,0,
+            0,0,1);
+    cv::Mat gt_T = (cv::Mat_<double>(3, 1) << -1,0,0);
+
+    cv::Mat R;
+    cv::Mat T;
+
+    EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
+    ofs << "Five Point Algorithm" << ", ";
     eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
     eightPointAlg.recoverRt(1); // 0: eight, 1: five
-    cout << "eightpointalg result: " << endl;
-    // cout << eightPointAlg.getE() << endl;
-    cout << eightPointAlg.getR() << endl;
-    cout << eightPointAlg.getT() << endl;
-    cv::Mat R1 = eightPointAlg.getR();
-    cv::Mat t1 = eightPointAlg.getT();
-    std::pair<cv::Mat, cv::Mat> eightpoint_pair = std::make_pair(R1, t1);
+    R = eightPointAlg.getR();
+    T = eightPointAlg.getT();
 
+    std::cout << "Without BA result: " << std::endl;
+    std::cout << R << std::endl;
+    std::cout << T << std::endl;
 
-    // bundle adjustment to optimize pose
-    BA ba(imagePair, points0, points1);
-    std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(RR, tt);
-    std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
-    std::cout << "BA result: " << std::endl;
-    std::cout << iter_transformation.first << std::endl;
-    std::cout << iter_transformation.second<< std::endl;
+    if(ba) {
+        ofs << "With BA" << ", ";
+        BA ba(imagePair, sparseMatching.getMatched0(), sparseMatching.getMatched1());
+        std::pair<cv::Mat, cv::Mat> init_transformation = std::make_pair(R, T);
+        std::pair<cv::Mat, cv::Mat> iter_transformation = ba.optimize(init_transformation, 100);
+        std::cout << "BA result: " << std::endl;
+        std::cout << iter_transformation.first << std::endl;
+        std::cout << iter_transformation.second<< std::endl;
+        R = iter_transformation.first;
+        T = iter_transformation.second;
+    }
 
-
-    // rectification
-    Rectify rectify = Rectify(iter_transformation.first, iter_transformation.second, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
-    cv::imwrite("img111.png", rectify.getRectified_img0());
-    cv::imwrite("img222.png", rectify.getRectified_img1());
-
-    // dense matching
+    Rectify rectify = Rectify(R, T, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
+    
     DenseMatching denseMatching(imagePair, rectify.getRectified_img0(), rectify.getRectified_img1());
-//    DenseMatching denseMatching(imagePair, detector.getImg0(), detector.getImg1());
-    denseMatching.match(1); // 0:sgbm, 1:bm
+
+    if(method == DENSEMATCHING::BM) {
+        ofs << "BM" << ", ";
+        denseMatching.match(1);
+    } else if(method == DENSEMATCHING::SGBM) {
+        ofs << "SGBM" << ", ";
+        denseMatching.match(0);
+    }
+
     Mat disp = denseMatching.getDisp();
     Mat color_disp = denseMatching.getColorDisp();
     imwrite("res.png", disp);
     imwrite("color_res.png", color_disp);
 
-    //here we show ground truth disp
-    Mat img0 = imread(imagePair.view_path_0, 1);
-    Mat img1 = imread(imagePair.view_path_1, 1);
-    //DenseMatching denseMatching_gt(imagePair, detector.getImg0(), detector.getImg1());
-    DenseMatching denseMatching_gt(imagePair, img0, img1);
-    denseMatching_gt.match(1);
-    Mat disp_gt = denseMatching_gt.getDisp();
-    imwrite("res_gt.png", disp_gt);
-    Mat color_disp_gt = denseMatching_gt.getColorDisp();
-    imwrite("color_res_gt.png", color_disp_gt);
-
-    Mat img = loadPFM(imagePair.disparity_path_0);
-    float inf = std::numeric_limits<float>::infinity();
-    Mat mask = img==inf;
-    img.setTo(0.0, mask);
-    imwrite("disp_given.png", img);
-//    cout << img << endl;
-    
     Evaluation evaluation(gt_R, gt_T, imagePair);
-    cout << evaluation.eval_bad(disp_gt, 0.5) << endl;
-    cout << evaluation.eval_bad(disp_gt, 2.0) << endl;
-    cout << evaluation.eval_bad(disp_gt, 4.0) << endl;
-    cout << evaluation.eval_rms(disp_gt) << endl;
+    imwrite("disp_given.png", evaluation.get_gt_disp());
+
+    ofs << "BAD0.5:" << evaluation.eval_bad(disp, 0.5) << ", ";
+    ofs << "BAD2.0:" << evaluation.eval_bad(disp, 2.0) << ", ";
+    ofs << "BAD4.0:" << evaluation.eval_bad(disp, 4.0) << ", ";
+    ofs << "RMS:" << evaluation.eval_rms(disp) << endl;;
+
+    ofs.close();
+ }
+
+void mesh_generation() {
     
-/*
-    Reconstruction reconstruction(disp_gt, imagePair);
-    reconstruction.calculate_depth();
-    Mat dmap = reconstruction.get_dmap();
-    imwrite("depth_gt.png", dmap);
+}
 
-    string filename = "mesh.off";
-    if(reconstruction.generate_mesh(filename)) {
-        cout << "cool" << endl;
-    }
-*/
+int main() {
+    // init dataloader
+    Dataloader dataloader;
+    dataloader.setDataset_name("Piano");
+    dataloader.retrievePair();
 
-    //-- Draw matches
-    //   cout << sparseMatching.getGood_matches().size();
-/*
-    Mat img_matches;
-    drawMatches(detector.getImg0(), detector.getKeypoints0(), detector.getImg1(), detector.getKeypoints1(), sparseMatching.getGood_matches(), img_matches, Scalar::all(-1),
-                 Scalar::all(-1), std::vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
-    //-- Show detected matches
-    namedWindow("Good Matches", 0);
-    resizeWindow("Good Matches", 1000, 1000);
-    imshow("Good Matches", img_matches );
-    waitKey();
-*/
+    // evaluate feature detection and matching
+//    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, false);
+//    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, true);
+
+    // evaluate pose R, t
+//    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, true);
+//    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, true, true);
+
+    // evaluate dense matching
+    eval_DM(dataloader, DENSEMATCHING::SGBM, true);
+    eval_DM(dataloader, DENSEMATCHING::BM, true);
     return 0;
 
 
