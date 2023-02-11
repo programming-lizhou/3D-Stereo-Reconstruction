@@ -22,16 +22,16 @@ void DenseMatching::match(int mode) {
     if(mode == 0) { // 0:sgbm, 1:bm
         Ptr<StereoSGBM> sgbm = StereoSGBM::create();
 
-        int blockSize = 7;
+        int blockSize = 6;
         int numDisparities = 256;
         int minDisparity = 0;
         int uniquenessRatio = 10;
         int speckleRange = 32;
         int speckleWindowSize = 100;
-        int preFilterCap = 63;
+        int preFilterCap = 58;
         int disp12MaxDiff = 1;
-        int p1 = 32 * 1 * blockSize * blockSize;
-        int p2 = 128 * 1 * blockSize * blockSize;
+        int p1 = 8 * 1 * blockSize * blockSize;
+        int p2 = 64 * 1 * blockSize * blockSize;
 
 
         sgbm->setNumDisparities(numDisparities);

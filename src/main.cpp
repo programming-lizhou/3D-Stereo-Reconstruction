@@ -144,7 +144,7 @@ int main() {
     Mat img1 = imread(imagePair.view_path_1, 1);
     //DenseMatching denseMatching_gt(imagePair, detector.getImg0(), detector.getImg1());
     DenseMatching denseMatching_gt(imagePair, img0, img1);
-    denseMatching_gt.match(1);
+    denseMatching_gt.match(0);
     Mat disp_gt = denseMatching_gt.getDisp();
     imwrite("res_gt.png", disp_gt);
     Mat color_disp_gt = denseMatching_gt.getColorDisp();

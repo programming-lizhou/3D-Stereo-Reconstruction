@@ -50,7 +50,7 @@ std::pair<double, double> Evaluation::eval_transformation(const std::pair<cv::Ma
     return distance;
 }
 
-
+// get the width of dark part on the left of the left image
 int get_blocked_width(cv::Mat disp) {
     int width = INT_MAX;
     int rows = disp.rows;
@@ -99,7 +99,7 @@ double Evaluation::eval_rms(cv::Mat disp) {
     int rows = gt_disp.rows;
     int cols = gt_disp.cols;
     int blocked_width = get_blocked_width(disp);
-    std::cout << blocked_width << std::endl;
+//    std::cout << blocked_width << std::endl;
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
             if(j < blocked_width) continue;
