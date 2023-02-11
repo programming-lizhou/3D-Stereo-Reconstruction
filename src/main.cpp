@@ -238,7 +238,10 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
 
 
 // if 0, eval, else generate mesh
-int eval_or_mesh = 0;
+int eval_or_mesh = 1;
+
+//datasets that we want to generate mesh
+vector<string> dataset_names{"Playtable"};
 
 int main() {
 if(eval_or_mesh == 0) 
@@ -261,8 +264,7 @@ if(eval_or_mesh == 0)
     eval_DM(dataloader, DENSEMATCHING::BM, true);
     return 0;
 }
-    //datasets that we want to generate mesh
-    vector<string> dataset_names{"Piano", "Recycle", "Playtable"};
+    //vector<string> dataset_names{"Piano", "Recycle", "Playtable"};
 for(auto& str : dataset_names) {
     Dataloader dataloader;
     dataloader.setDataset_name(str);
@@ -271,7 +273,7 @@ for(auto& str : dataset_names) {
     Image_pair imagePair = dataloader.getPair();
 
     Detector detector(imagePair);
-    detector.detector_SIFT();
+    detector.detector_BRISK();
 
     SparseMatching sparseMatching(0, NORM_L2);
     sparseMatching.match(detector.getDescriptors0(), detector.getDescriptors1(), detector.getKeypoints0(), detector.getKeypoints1());
@@ -295,7 +297,10 @@ for(auto& str : dataset_names) {
 
     Rectify rectify = Rectify(R, T, imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, detector.getImg0(), detector.getImg1());
 
-    DenseMatching denseMatching(imagePair, rectify.getRectified_img0(), rectify.getRectified_img1());
+    Mat img0 = imread(imagePair.view_path_0, 1);
+    Mat img1 = imread(imagePair.view_path_1, 1);
+
+    DenseMatching denseMatching(imagePair, img0, img1);
     denseMatching.match(0); //sgbm
     Mat disp = denseMatching.getDisp();
     
