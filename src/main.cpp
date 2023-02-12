@@ -249,8 +249,14 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
     imwrite(filename_color_disp_from_gt_img, color_disp_from_gt_img);
 
     Evaluation evaluation(gt_R, gt_T, imagePair);
+    Mat gt_disp = evaluation.get_gt_disp();
     string filename_gt_disp = result_dir + "gt_disp" + img_suffix + ".png";
-    imwrite(filename_gt_disp, evaluation.get_gt_disp());
+    imwrite(filename_gt_disp, gt_disp);
+    Mat color_gt_disp;
+    applyColorMap(gt_disp, color_gt_disp, cv::COLORMAP_JET);
+    string filename_color_gt_disp = result_dir + "color_gt_disp" + img_suffix + ".png";
+    imwrite(filename_color_gt_disp, color_gt_disp);
+
 
     Reconstruction reconstruction(disp, imagePair);
     reconstruction.calculate_depth();
@@ -292,7 +298,7 @@ if(eval_or_mesh == 0)
     Dataloader dataloader;
     dataloader.setDataset_name("Piano");
     dataloader.retrievePair();
-
+/*
     eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::BF, false);
     eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::BF, true);
     eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::FLANN, false);
@@ -332,7 +338,7 @@ if(eval_or_mesh == 0)
     eval_pose(dataloader, POSECALCULATION::FIVE_POINT, true, false);
     eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, true);
     eval_pose(dataloader, POSECALCULATION::FIVE_POINT, true, true);
-
+*/
     // evaluate dense matching
     eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, true, "_1");
     eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, false, "_2");

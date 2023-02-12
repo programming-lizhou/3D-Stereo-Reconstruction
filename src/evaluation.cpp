@@ -18,7 +18,9 @@ Evaluation::Evaluation(cv::Mat gt_R, cv::Mat gt_T, Image_pair ip){
     float inf = std::numeric_limits<float>::infinity();
     cv::Mat mask = disp==inf;
     disp.setTo(0.0, mask);
-    this->gt_disp = disp;
+    this->gt_disp_origin = disp;
+    cv::normalize(disp, this->gt_disp, 0, 255, cv::NORM_MINMAX);
+    this->gt_disp.convertTo(this->gt_disp, CV_8UC1);
 
 }
 
@@ -80,7 +82,7 @@ double Evaluation::eval_bad(cv::Mat disp, float eval) {
         for (int j = 0; j < cols; j++) {
             if(j < blocked_width) continue;
             float val = disp.ptr<uchar>(i)[j];
-            float gt_val = gt_disp.at<float>(i, j);
+            float gt_val = gt_disp_origin.at<float>(i, j);
             if(abs(val - gt_val) > eval && gt_val != 0.0) {
                 ++count;
             }
@@ -104,7 +106,7 @@ double Evaluation::eval_rms(cv::Mat disp) {
         for (int j = 0; j < cols; j++) {
             if(j < blocked_width) continue;
             float val = disp.ptr<uchar>(i)[j];
-            float gt_val = gt_disp.at<float>(i, j);
+            float gt_val = gt_disp_origin.at<float>(i, j);
             result += pow(val - gt_val, 2);
         }
     }

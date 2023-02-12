@@ -23,6 +23,7 @@ private:
     cv::Mat gt_R;
     cv::Mat gt_T;
     cv::Mat gt_disp;
+    cv::Mat gt_disp_origin;
 };
 
 
