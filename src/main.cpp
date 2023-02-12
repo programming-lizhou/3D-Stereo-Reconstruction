@@ -163,7 +163,7 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
     ofs.close();
 }
 
- void eval_DM(Dataloader& dataloader, DENSEMATCHING method, bool ba) {
+ void eval_DM(Dataloader& dataloader, POSECALCULATION posecal, DENSEMATCHING method, bool ba) {
     string filename = result_dir + "eval_dense_matching.txt";
     ofstream ofs;
     ofs.open(filename, ios::out | ios::app);
@@ -186,9 +186,15 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
     cv::Mat T;
 
     EightPointAlg eightPointAlg(imagePair.intrinsic_mtx0, imagePair.intrinsic_mtx1, sparseMatching.getMatched0(), sparseMatching.getMatched1());
-    ofs << "Five Point Algorithm" << ", ";
-    eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
-    eightPointAlg.recoverRt(1); // 0: eight, 1: five
+    if(posecal == POSECALCULATION::EIGHT_POINT) {
+        ofs << "Eight Point Algorithm" << ", ";
+        eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
+        eightPointAlg.recoverRt(0); // 0: eight, 1: five
+    } else if(posecal == POSECALCULATION::FIVE_POINT) {
+        ofs << "Five Point Algorithm" << ", ";
+        eightPointAlg.computeFMtx(1); // 0: manually, 1: opencv
+        eightPointAlg.recoverRt(1); // 0: eight, 1: five
+    }
     R = eightPointAlg.getR();
     T = eightPointAlg.getT();
 
@@ -251,17 +257,56 @@ if(eval_or_mesh == 0)
     dataloader.setDataset_name("Piano");
     dataloader.retrievePair();
 
-    // evaluate feature detection and matching
-    //    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, false);
-    //    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::BF, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::BF, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::FLANN, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::SIFT, Matchers::FLANN, true);
+
+    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::BF, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::BF, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::SURF, Matchers::FLANN, true);
+
+    eval_feature_detection_and_matching(dataloader, Detectors::ORB, Matchers::BF, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::ORB, Matchers::BF, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::ORB, Matchers::FLANN, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::ORB, Matchers::FLANN, true);
+
+    eval_feature_detection_and_matching(dataloader, Detectors::FREAK, Matchers::BF, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::FREAK, Matchers::BF, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::FREAK, Matchers::FLANN, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::FREAK, Matchers::FLANN, true);
+
+    eval_feature_detection_and_matching(dataloader, Detectors::BRISK, Matchers::BF, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::BRISK, Matchers::BF, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::BRISK, Matchers::FLANN, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::BRISK, Matchers::FLANN, true);
+
+    eval_feature_detection_and_matching(dataloader, Detectors::KAZE, Matchers::BF, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::KAZE, Matchers::BF, true);
+    eval_feature_detection_and_matching(dataloader, Detectors::KAZE, Matchers::FLANN, false);
+    eval_feature_detection_and_matching(dataloader, Detectors::KAZE, Matchers::FLANN, true);
 
     // evaluate pose R, t
-    //    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, true);
-    //    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, true, true);
+    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, false, false);
+    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, true, false);
+    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, false, true);
+    eval_pose(dataloader, POSECALCULATION::EIGHT_POINT, true, true);
+    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, false);
+    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, true, false);
+    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, false, true);
+    eval_pose(dataloader, POSECALCULATION::FIVE_POINT, true, true);
 
     // evaluate dense matching
-    eval_DM(dataloader, DENSEMATCHING::SGBM, true);
-    eval_DM(dataloader, DENSEMATCHING::BM, true);
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, true);
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, false);
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::BM, true);
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::BM, false);
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::SGBM, true);
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::SGBM, false);
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::BM, true);
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::BM, false);
+
     return 0;
 }
     //vector<string> dataset_names{"Piano", "Recycle", "Playtable"};
