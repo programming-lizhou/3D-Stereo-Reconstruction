@@ -8,8 +8,7 @@ This is our project for the course 3D Scanning and Motion Capture. The topic is 
 
 ## Config
 ### Dataset
-+ Middlebury2014 dataset
-+ Source: https://vision.middlebury.edu/stereo/data/scenes2014
++ [Middlebury2014](https://vision.middlebury.edu/stereo/data/scenes2014)
 
 ### System environment
 + Ubuntu20.04 x64
@@ -25,5 +24,5 @@ This is our project for the course 3D Scanning and Motion Capture. The topic is 
 
 
 ## Results
-
+Here we show some visualization results. For concrete statistic, please check our report.
 
