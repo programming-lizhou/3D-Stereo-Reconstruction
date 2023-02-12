@@ -163,7 +163,7 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
     ofs.close();
 }
 
- void eval_DM(Dataloader& dataloader, POSECALCULATION posecal, DENSEMATCHING method, bool ba, string img_suffix) {
+ void eval_DM(Dataloader& dataloader, POSECALCULATION posecal, DENSEMATCHING method, bool ba, string img_prefix) {
     string filename = result_dir + "eval_dense_matching.txt";
     ofstream ofs;
     ofs.open(filename, ios::out | ios::app);
@@ -228,9 +228,9 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
 
     Mat disp = denseMatching.getDisp();
     Mat color_disp = denseMatching.getColorDisp();
-    string filename_disp = result_dir + "disp_from_rectified" + img_suffix + ".png";
+    string filename_disp = result_dir + img_prefix +"disp_from_rectified" + ".png";
     imwrite(filename_disp , disp);
-    string filename_color_disp = result_dir + "color_disp_from_rectified" + img_suffix + ".png";
+    string filename_color_disp = result_dir + img_prefix + "color_disp_from_rectified" + ".png";
     imwrite(filename_color_disp, color_disp);
 
     Mat gt_img0 = imread(imagePair.view_path_0, 1);
@@ -243,37 +243,37 @@ void eval_pose(Dataloader& dataloader, POSECALCULATION method, bool ransac, bool
     }
     Mat disp_from_gt_img = denseMatching_gt.getDisp();
     Mat color_disp_from_gt_img = denseMatching_gt.getColorDisp();
-    string filename_disp_from_gt_img = result_dir + "disp_from_gt_img" + img_suffix + ".png";
-    string filename_color_disp_from_gt_img = result_dir + "color_disp_from_gt_img" + img_suffix + ".png";
+    string filename_disp_from_gt_img = result_dir + img_prefix + "disp_from_gt_img" + ".png";
+    string filename_color_disp_from_gt_img = result_dir + img_prefix + "color_disp_from_gt_img" + ".png";
     imwrite(filename_disp_from_gt_img, disp_from_gt_img);
     imwrite(filename_color_disp_from_gt_img, color_disp_from_gt_img);
 
     Evaluation evaluation(gt_R, gt_T, imagePair);
     Mat gt_disp = evaluation.get_gt_disp();
-    string filename_gt_disp = result_dir + "gt_disp" + img_suffix + ".png";
+    string filename_gt_disp = result_dir + img_prefix + "gt_disp" + ".png";
     imwrite(filename_gt_disp, gt_disp);
     Mat color_gt_disp;
     applyColorMap(gt_disp, color_gt_disp, cv::COLORMAP_JET);
-    string filename_color_gt_disp = result_dir + "color_gt_disp" + img_suffix + ".png";
+    string filename_color_gt_disp = result_dir + img_prefix + "color_gt_disp" + ".png";
     imwrite(filename_color_gt_disp, color_gt_disp);
 
 
     Reconstruction reconstruction(disp, imagePair);
     reconstruction.calculate_depth();
     Mat dmap_from_rectified = reconstruction.get_dmap();
-    string filename_dmap_from_rectified = result_dir + "depth_from_rectified" + img_suffix + ".png";
+    string filename_dmap_from_rectified = result_dir + img_prefix + "depth_from_rectified" + ".png";
     imwrite(filename_dmap_from_rectified, dmap_from_rectified);
 
     Reconstruction reconstruction_gt_img(disp_from_gt_img, imagePair);
     reconstruction_gt_img.calculate_depth();
     Mat dmap_from_gt_img = reconstruction_gt_img.get_dmap();
-    string filename_dmap_from_gt_img = result_dir + "depth_from_gt_img" + img_suffix + ".png";
+    string filename_dmap_from_gt_img = result_dir + img_prefix + "depth_from_gt_img" + ".png";
     imwrite(filename_dmap_from_gt_img, dmap_from_gt_img);
 
     Reconstruction reconstruction_gt_disp(evaluation.get_gt_disp(), imagePair);
     reconstruction_gt_disp.calculate_depth();
     Mat dmap_from_gt_disp = reconstruction_gt_disp.get_dmap();
-    string filename_dmap_from_gt_disp = result_dir + "depth_from_gt_disp" + img_suffix + ".png";
+    string filename_dmap_from_gt_disp = result_dir + img_prefix + "depth_from_gt_disp" + ".png";
     imwrite(filename_dmap_from_gt_disp, dmap_from_gt_disp);
 
     ofs << "BAD0.5:" << evaluation.eval_bad(disp, 0.5) << ", ";
@@ -340,14 +340,14 @@ if(eval_or_mesh == 0)
     eval_pose(dataloader, POSECALCULATION::FIVE_POINT, true, true);
 */
     // evaluate dense matching
-    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, true, "_1");
-    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, false, "_2");
-    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::BM, true, "_3");
-    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::BM, false, "_4");
-    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::SGBM, true, "_5");
-    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::SGBM, false, "_6");
-    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::BM, true, "_7");
-    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::BM, false, "_8");
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, true, "1_");
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::SGBM, false, "2_");
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::BM, true, "3_");
+    eval_DM(dataloader, POSECALCULATION::EIGHT_POINT,DENSEMATCHING::BM, false, "4_");
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::SGBM, true, "5_");
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::SGBM, false, "6_");
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::BM, true, "7_");
+    eval_DM(dataloader, POSECALCULATION::FIVE_POINT,DENSEMATCHING::BM, false, "8_");
 
     return 0;
 }
