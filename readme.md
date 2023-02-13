@@ -24,5 +24,5 @@ This is our project for the course 3D Scanning and Motion Capture. The topic is 
 ![Image text](https://github.com/programming-lizhou/3D-Stereo-Reconstruction/blob/main/gitfiles/pipeline.png)
 
 ## Results
-For results, please check our report.
+For results, please check our [report](https://github.com/programming-lizhou/3D-Stereo-Reconstruction/blob/main/gitfiles/report.pdf).
 
