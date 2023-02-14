@@ -11,7 +11,7 @@ This is our project for the course 3D Scanning and Motion Capture. The topic is 
 + [Middlebury2014](https://vision.middlebury.edu/stereo/data/scenes2014)
 
 ### System environment
-+ Ubuntu20.04 x64
++ Ubuntu 20.04 x64
 
 ### Used libraries
 + Opencv 4.6.0
