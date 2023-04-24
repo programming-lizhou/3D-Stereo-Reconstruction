@@ -1,5 +1,5 @@
 ## Introduction
-This is our project for the course 3D Scanning and Motion Capture. The topic is Stereo Reconstruction.
+Stereo Reconstruction.
 
 ## Group member
 + Li Zhou
